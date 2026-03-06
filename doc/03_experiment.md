@@ -8,6 +8,6 @@
 
 **Fig. 6:** Qualitative Results on Imagenet 256 × 256 using RAC. It can achieve significant results in the state reconstruction mode with just 30k steps.
 
-<img src="./static/images/image.png" alt="Existing baseline latent manifolds and RAC latent regularity">
+<img src="./static/images/fig11.png" alt="Existing baseline latent manifolds and RAC latent regularity">
 
 **Fig. 11:** The existing baseline latent manifolds show architecture-dependent anisotropy, where principal components are dominated by either stochastic high-frequency texture or coarse low-frequency blocks instead of semantic structure. RAC consistently re-allocates variance to spatially coherent components, yielding cleaner, more content-aligned latent geometry while preserving scene identity, which suggests improved cross-architecture latent regularity.

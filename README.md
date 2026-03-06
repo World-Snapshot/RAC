@@ -2,7 +2,7 @@
 
 [[Paper]]() [[Project Page]]() 
 
-Here is a nano demonstration, which is the initial proof-of-concept code we developed at the beginning of this project. It does not include the significant contributions mentioned in the paper (i.e., Informal implementation).
+Here is a nano demonstration, which is the initial proof-of-concept code we developed at the beginning of this project. It does not include the significant contributions mentioned in the paper (i.e., this is an informal implementation).
 
 More details will be released after the code is cleaned.
 
