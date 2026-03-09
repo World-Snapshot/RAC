@@ -1,13 +1,13 @@
 ## BibTex
 
 ```
-@misc{fang2025streamflowtheoryalgorithmimplementation,
-      title={StreamFlow: Theory, Algorithm, and Implementation for High-Efficiency Rectified Flow Generation}, 
-      author={Sen Fang and Hongbin Zhong and Yalin Feng and Dimitris N. Metaxas},
-      year={2025},
-      eprint={2511.22009},
+@misc{fang2026racrectifiedflowauto,
+      title={RAC: Rectified Flow Auto Coder}, 
+      author={Sen Fang and Yalin Feng and Yanxin Zhang and Dimitris N. Metaxas},
+      year={2026},
+      eprint={2603.05925},
       archivePrefix={arXiv},
       primaryClass={cs.CV},
-      url={https://arxiv.org/abs/2511.22009}, 
+      url={https://arxiv.org/abs/2603.05925}, 
 }
 ```
