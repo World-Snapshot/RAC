@@ -8,7 +8,10 @@ More details will be released after the code is cleaned.
 
 ![RAC Cover](./static/images/cover.png)
 
-**Fig. 1:** The trajectory demonstration of RAC: Make the reconstruction task a condition generation task; Make the decoder the encoder; Make the single-step decoding and encoding a multi-step decoding and encoding.
+**Fig. 1:** The trajectory demonstration of RAC: 
+- Make the reconstruction task a condition generation task;
+- Make the decoder the encoder;
+- Make the single-step decoding and encoding a multi-step decoding and encoding.
 
 ## Usage
 
