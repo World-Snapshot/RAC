@@ -19,7 +19,11 @@ More details will be released after the code is cleaned.
 conda create -n RAC python=3.11 -y
 conda activate RAC
 pip install numpy matplotlib tqdm torch torchvision diffusers
-python train_nano_rac.py
+python train_nano_rac_v1.py
+
+# or
+python train_nano_rac_v1.1.py
+# The upgraded versions in the middle and later stages
 ```
 
 ## BibTex

@@ -33,7 +33,7 @@ def parse_args():
     parser.add_argument(
         "--dataset",
         type=str,
-        default="dataset/mini-imagenet",
+        default="dataset/LAION-Aesthetics",
         help="Path to training images or a HF dataset clone.",
     )
     parser.add_argument(
@@ -42,7 +42,7 @@ def parse_args():
         default="train",
         help="Dataset split name when using a HF dataset clone.",
     )
-    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--steps", type=int, default=100000)
     parser.add_argument("--size", type=int, default=256)
     parser.add_argument("--lr", type=float, default=3e-4)
@@ -1263,6 +1263,7 @@ def main():
         size=args.size,
         random_crop=True,
         split=args.dataset_split,
+        num_workers=4,  # Use 4 workers for faster data loading
     )
     data_iter = iter(dataloader)
 
