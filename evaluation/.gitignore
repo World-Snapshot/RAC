@@ -1,0 +1,9 @@
+data/
+results/
+third_party/
+vendor/
+weights/
+__pycache__/
+*.pyc
+.venv/
+*.log

@@ -1,0 +1,83 @@
+version: 1
+seed: 2026
+
+data:
+  dataset: ImageNet-1K
+  resolution: 256
+  channels: RGB
+  preprocessing: resize_shorter_side_then_center_crop
+  interpolation: bicubic
+  input_range_on_disk: uint8_0_255
+  pilot:
+    samples: 1000
+    publishable: false
+  paper:
+    split: validation
+    samples: 50000
+    publishable: true
+
+reconstruction_metrics:
+  distributional:
+    - clean_rFID
+  paired:
+    - MSE
+    - PSNR
+    - SSIM
+    - LPIPS
+  uncertainty: paired_95_percent_confidence_interval
+
+runtime:
+  hardware: single_Quadro_RTX_8000
+  precision: fp16
+  warmup_batches: 20
+  timed_batches: 100
+  report:
+    - encoder_latency
+    - decoder_latency
+    - end_to_end_latency
+    - peak_activation_memory
+    - unique_parameters
+    - encoder_parameters
+    - decoder_parameters
+    - NFE
+
+primary_capacity_matched:
+  - name: RAC-1x
+    latent: 4x32x32_continuous
+    decode_nfe: 4
+    target_total_parameters: 49505156
+    checkpoint_required: true
+  - name: SSDD-S-F8C4
+    latent: 4x32x32_continuous
+    decode_nfe: 8
+    total_parameters: 48220723
+    official_checkpoint: facebook/SSDD/F8C4/F8C4_S_256.safetensors
+
+efficiency_points:
+  - RAC-Tiny
+  - TAESD
+
+official_checkpoint_comparison:
+  - RAC
+  - SSDD-S-F8C4
+  - FlexTok-d12-d12-IN1K
+  - SEMANTICIST-L
+  - SD-VAE
+  - TAESD
+
+controlled_from_scratch:
+  dataset: ImageNet-1K-train
+  compare:
+    - RAC-1x-F8C4
+    - SSDD-S-F8C4
+    - DiTo-B-F8C4
+  x_axes:
+    - images_seen
+    - training_FLOPs
+    - GPU_hours
+  never_compare_raw_training_loss_across_methods: true
+
+latent_shift:
+  formula: z_sigma = z_native + sigma * std(z_native) * epsilon
+  sigmas: [0.0, 0.1, 0.2, 0.3, 0.5]
+  continuous_F8C4_only: true
