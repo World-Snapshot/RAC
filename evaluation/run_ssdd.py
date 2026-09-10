@@ -26,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--decoder", default="S")
     parser.add_argument("--encoder", choices=["f8c4", "sdvae"], default="f8c4")
     parser.add_argument("--local-accelerate-checkpoint", action="store_true")
+    parser.add_argument("--use-ema", action="store_true")
     parser.add_argument("--steps", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--image-size", type=int, default=256)
@@ -65,7 +66,8 @@ def main() -> None:
     if args.local_accelerate_checkpoint:
         from safetensors.torch import load_file
 
-        weights_path = checkpoint / "model_1.safetensors" if checkpoint.is_dir() else checkpoint
+        filename = "model_1.safetensors" if args.use_ema else "model.safetensors"
+        weights_path = checkpoint / filename if checkpoint.is_dir() else checkpoint
         state = load_file(str(weights_path), device="cpu")
         incompatible = model.load_state_dict(state, strict=False)
         unexpected = list(incompatible.unexpected_keys)
@@ -117,7 +119,7 @@ def main() -> None:
             "method": f"SSDD-{args.decoder}-{args.encoder.upper()}-K{args.steps}",
             "source": "https://github.com/facebookresearch/SSDD",
             "checkpoint": str(checkpoint),
-            "checkpoint_format": "accelerate_ema" if args.local_accelerate_checkpoint else "official",
+            "checkpoint_format": ("accelerate_ema" if args.use_ema else "accelerate_current") if args.local_accelerate_checkpoint else "official",
             "latent": "4x32x32_continuous",
             "noise_seed": args.seed,
             "encoder_mode": "frozen_sdvae" if args.encoder == "sdvae" else "native",
