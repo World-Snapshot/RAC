@@ -128,6 +128,7 @@ def main() -> None:
             "encode_nfe": 1,
             "decode_nfe": args.steps,
             "unique_parameters": unique_parameters,
+            "trainable_parameters": sum(parameter.numel() for parameter in model.decoder.parameters()),
             "encoder_parameters": encoder_parameters,
             "decoder_parameters": sum(parameter.numel() for parameter in model.decoder.parameters()),
             "shared_encoder_decoder_parameters": False,
