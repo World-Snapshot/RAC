@@ -113,7 +113,9 @@ def main() -> None:
             decode_times.append(decode_ms / len(batch_paths))
             save_batch(prediction, [path.name for path in batch_paths], output)
 
-    unique_parameters = sum(parameter.numel() for parameter in model.parameters())
+    encoder_module = model.encoder.sdvae[0] if hasattr(model.encoder, "sdvae") else model.encoder
+    encoder_parameters = sum(parameter.numel() for parameter in encoder_module.parameters())
+    unique_parameters = sum(parameter.numel() for parameter in model.parameters()) + encoder_parameters
     write_json(
         {
             "method": f"SSDD-{args.decoder}-{args.encoder.upper()}-K{args.steps}",
@@ -126,7 +128,7 @@ def main() -> None:
             "encode_nfe": 1,
             "decode_nfe": args.steps,
             "unique_parameters": unique_parameters,
-            "encoder_parameters": sum(parameter.numel() for parameter in model.encoder.parameters()),
+            "encoder_parameters": encoder_parameters,
             "decoder_parameters": sum(parameter.numel() for parameter in model.decoder.parameters()),
             "shared_encoder_decoder_parameters": False,
             "precision": args.precision,
