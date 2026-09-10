@@ -9,7 +9,8 @@ data:
   interpolation: bicubic
   input_range_on_disk: uint8_0_255
   pilot:
-    samples: 1000
+    default_samples: 20
+    samples_are_configurable: true
     publishable: false
   paper:
     split: validation
@@ -28,7 +29,9 @@ reconstruction_metrics:
 
 runtime:
   hardware: single_Quadro_RTX_8000
-  precision: fp16
+  reconstruction_quality_precision: fp32
+  convolutional_latency_precision: fp16
+  cross_architecture_latency_precision: fp32
   warmup_batches: 20
   timed_batches: 100
   report:

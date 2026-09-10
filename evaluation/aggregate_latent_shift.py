@@ -17,7 +17,11 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     summaries = sorted(args.results.resolve().glob("*/summary.json"))
-    payloads = [read_json(path) for path in summaries if "rows" in read_json(path)]
+    payloads = []
+    for path in summaries:
+        payload = read_json(path)
+        if "rows" in payload:
+            payloads.append(payload)
     if not payloads:
         raise FileNotFoundError(f"No latent-shift */summary.json files under {args.results}.")
     signatures = {

@@ -4,6 +4,15 @@ This directory implements three complementary comparisons requested after review
 weights, third-party repositories, and results are ignored by Git; the protocol and adapters are
 versioned.
 
+## Setup
+
+Install the two small evaluation-only packages into the ignored local vendor directory:
+
+```bash
+/research/cbim/vast/sf895/miniforge3/envs/WSM/bin/python -m pip install \
+  --target vendor --no-deps clean-fid mup
+```
+
 ## 1. Official-checkpoint reconstruction benchmark
 
 Evaluate all available ImageNet-256 checkpoints on exactly the same prepared images and metric
@@ -38,8 +47,28 @@ python run_sdvae.py --inputs data/smoke4 --output results/sdvae/recon --device c
 ```
 
 Evaluate each output with `evaluate_reconstructions.py`, then combine tables with
-`aggregate_results.py`. The existing local 1K subset may be used only as a pilot. The paper table
+`aggregate_results.py`. Select the subset size with `prepare_inputs.py --count`. A paper table
 requires ImageNet validation 50K.
+
+```bash
+WSM_PYTHON=/research/cbim/vast/sf895/miniforge3/envs/WSM/bin/python
+for method in rac ssdd sdvae flextok semanticist; do
+  "$WSM_PYTHON" evaluate_reconstructions.py \
+    --inputs data/smoke4 \
+    --reconstructions "results/$method/recon" \
+    --output "results/$method/metrics" \
+    --method "$method" \
+    --device cuda:0
+done
+"$WSM_PYTHON" aggregate_results.py \
+  --results results --output results/reconstruction_benchmark.md
+```
+
+The WSM environment supplies a compatible PyTorch/`torchvision` pair; the local vendor directory
+supplies clean-FID and `mup` without changing that environment. Use FP32 for cross-architecture
+reconstruction quality and latency, since the Quadro RTX 8000 does not natively execute BF16.
+Retain FP16 only for the paper's directly matched convolutional latency comparison between RAC and
+SD-VAE. Always report the chosen precision in the result metadata.
 
 ## 2. Controlled from-scratch comparison
 
@@ -53,6 +82,21 @@ Inject `z_sigma = z + sigma * std(z) * epsilon`, with paired seeds and
 `sigma in {0, .1, .2, .3, .5}`. This comparison is restricted to continuous F8C4 methods (RAC,
 SD-VAE, SSDD, and a trained DiTo-F8C4). FlexTok's discrete FSQ sequences and SEMANTICIST's 1D slots
 do not share this latent geometry and are therefore excluded rather than perturbed artificially.
+
+```bash
+python evaluate_latent_shift.py \
+  --method rac --inputs data/smoke4 --output results/latent_shift/rac --device cuda:0
+python evaluate_latent_shift.py \
+  --method sdvae --inputs data/smoke4 --output results/latent_shift/sdvae --device cuda:0
+python evaluate_latent_shift.py \
+  --method ssdd --inputs data/smoke4 --output results/latent_shift/ssdd --device cuda:0
+python aggregate_latent_shift.py \
+  --results results/latent_shift --output results/latent_shift_benchmark.md
+```
+
+Use each method's native encoded latent, normalize perturbation strength by its per-image latent
+standard deviation, and reuse the same standard-normal direction for each paired image and sigma.
+The clean and perturbed SSDD paths additionally reuse the same decoder noise.
 
 ## Interpretation guardrail
 

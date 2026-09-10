@@ -3,8 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Iterable
+
+LOCAL_VENDOR = Path(__file__).resolve().parent / "vendor"
+if LOCAL_VENDOR.exists():
+    sys.path.insert(0, str(LOCAL_VENDOR))
 
 import numpy as np
 from PIL import Image

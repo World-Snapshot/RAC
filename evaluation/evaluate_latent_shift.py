@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import sys
 from pathlib import Path
 from typing import Callable
@@ -134,6 +135,24 @@ def build_method(
     )
 
 
+def paired_noise(
+    sample_shape: torch.Size,
+    names: list[str],
+    seed: int,
+    device: torch.device,
+    dtype: torch.dtype,
+) -> torch.Tensor:
+    samples = []
+    for name in names:
+        digest = hashlib.sha256(f"{seed}:{name}".encode("utf-8")).digest()
+        image_seed = int.from_bytes(digest[:8], "little") % (2**63 - 1)
+        generator = torch.Generator(device=device).manual_seed(image_seed)
+        samples.append(
+            torch.randn(sample_shape, generator=generator, device=device, dtype=dtype)
+        )
+    return torch.stack(samples)
+
+
 def main() -> None:
     args = parse_args()
     if not torch.cuda.is_available():
@@ -149,8 +168,6 @@ def main() -> None:
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
     use_amp = args.precision == "fp16"
-    latent_generator = torch.Generator(device=device).manual_seed(args.seed)
-    decoder_generator = torch.Generator(device=device).manual_seed(args.seed + 1)
     records: list[dict] = []
 
     with torch.inference_mode():
@@ -163,19 +180,22 @@ def main() -> None:
                     raise RuntimeError(f"Expected F8C4 latent, received {tuple(latent.shape)}.")
                 scale = latent.float().flatten(1).std(dim=1, unbiased=False)
                 scale = scale.clamp_min(1e-6).view(-1, 1, 1, 1).to(latent.dtype)
-                direction = torch.randn(
-                    latent.shape,
-                    generator=latent_generator,
-                    device=device,
-                    dtype=latent.dtype,
+                names = [path.name for path in batch_paths]
+                direction = paired_noise(
+                    latent.shape[1:],
+                    names,
+                    args.seed,
+                    device,
+                    latent.dtype,
                 )
                 decoder_noise = None
                 if args.method == "ssdd":
-                    decoder_noise = torch.randn(
-                        target.shape,
-                        generator=decoder_generator,
-                        device=device,
-                        dtype=target.dtype,
+                    decoder_noise = paired_noise(
+                        target.shape[1:],
+                        names,
+                        args.seed + 1,
+                        device,
+                        target.dtype,
                     )
                 clean = decode(latent, decoder_noise).float().clamp(0, 1)
 

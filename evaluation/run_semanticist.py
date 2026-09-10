@@ -53,6 +53,8 @@ def main() -> None:
         raise RuntimeError("CUDA is required.")
     if not 1 <= args.slots <= 256:
         raise ValueError("--slots must be between 1 and 256.")
+    if args.steps < 2:
+        raise ValueError("--steps must be at least 2 for SEMANTICIST's Gaussian diffusion sampler.")
     device = torch.device(args.device)
     torch.cuda.set_device(device)
     sys.path.insert(0, str(args.source.resolve()))

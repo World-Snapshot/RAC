@@ -24,8 +24,8 @@ def main() -> None:
     lines = [
         "# Unified reconstruction benchmark",
         "",
-        "| Method | Samples | Params (M) | NFE | MSE ↓ | PSNR ↑ | SSIM ↑ | clean-rFID ↓ |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|",
+        "| Method | Samples | Params (M) | NFE | MSE ↓ | PSNR ↑ | SSIM ↑ | LPIPS ↓ | clean-rFID ↓ |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         model = row.get("model", {})
@@ -35,9 +35,11 @@ def main() -> None:
         nfe_text = str(nfe) if nfe is not None else "—"
         rfid = row.get("clean_rfid")
         rfid_text = f"{rfid:.3f}" if isinstance(rfid, (int, float)) else "—"
+        lpips = row.get("lpips")
+        lpips_text = f"{lpips['mean']:.4f}" if isinstance(lpips, dict) else "—"
         lines.append(
             "| {method} | {count} | {params} | {nfe} | {mse:.6f} | {psnr:.3f} | "
-            "{ssim:.4f} | {rfid} |".format(
+            "{ssim:.4f} | {lpips} | {rfid} |".format(
                 method=row["method"],
                 count=row["count"],
                 params=params_text,
@@ -45,6 +47,7 @@ def main() -> None:
                 mse=row["metrics"]["mse"]["mean"],
                 psnr=row["metrics"]["psnr"]["mean"],
                 ssim=row["metrics"]["ssim"]["mean"],
+                lpips=lpips_text,
                 rfid=rfid_text,
             )
         )
@@ -52,7 +55,7 @@ def main() -> None:
         [
             "",
             "Raw training losses are intentionally excluded because objectives and normalizations differ.",
-            "Pilot results are not publishable; use the 50K ImageNet validation protocol for paper numbers.",
+            "Report the exact sample count; use ImageNet validation 50K for directly comparable rFID.",
             "",
         ]
     )
