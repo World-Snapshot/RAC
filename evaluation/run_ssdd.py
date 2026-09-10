@@ -24,6 +24,8 @@ def parse_args() -> argparse.Namespace:
         default=root / "weights" / "F8C4" / "F8C4_S_256.safetensors",
     )
     parser.add_argument("--decoder", default="S")
+    parser.add_argument("--encoder", choices=["f8c4", "sdvae"], default="f8c4")
+    parser.add_argument("--local-accelerate-checkpoint", action="store_true")
     parser.add_argument("--steps", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--image-size", type=int, default=256)
@@ -53,12 +55,24 @@ def main() -> None:
     sys.path.insert(0, str(args.source.resolve()))
     from ssdd import SSDD
 
+    checkpoint = args.checkpoint.resolve()
     model = SSDD(
-        encoder="f8c4",
+        encoder=args.encoder,
         decoder=args.decoder,
         fm_sampler={"steps": args.steps, "t_pow_shift": 2.0},
-        checkpoint=str(args.checkpoint.resolve()),
-    ).eval().to(device)
+        checkpoint=None if args.local_accelerate_checkpoint else str(checkpoint),
+    )
+    if args.local_accelerate_checkpoint:
+        from safetensors.torch import load_file
+
+        weights_path = checkpoint / "model_1.safetensors" if checkpoint.is_dir() else checkpoint
+        state = load_file(str(weights_path), device="cpu")
+        incompatible = model.load_state_dict(state, strict=False)
+        unexpected = list(incompatible.unexpected_keys)
+        missing_nonencoder = [key for key in incompatible.missing_keys if not key.startswith("encoder.")]
+        if unexpected or missing_nonencoder:
+            raise RuntimeError(f"Incompatible local SSDD checkpoint: unexpected={unexpected[:10]}, missing_nonencoder={missing_nonencoder[:10]}")
+    model = model.eval().to(device)
     paths = [path for path in image_paths(args.inputs.resolve()) if path.suffix.lower() == ".png"]
     output = args.output.resolve()
     output.mkdir(parents=True, exist_ok=True)
@@ -100,12 +114,13 @@ def main() -> None:
     unique_parameters = sum(parameter.numel() for parameter in model.parameters())
     write_json(
         {
-            "method": f"SSDD-{args.decoder}-F8C4-K{args.steps}",
+            "method": f"SSDD-{args.decoder}-{args.encoder.upper()}-K{args.steps}",
             "source": "https://github.com/facebookresearch/SSDD",
-            "checkpoint": str(args.checkpoint.resolve()),
+            "checkpoint": str(checkpoint),
+            "checkpoint_format": "accelerate_ema" if args.local_accelerate_checkpoint else "official",
             "latent": "4x32x32_continuous",
             "noise_seed": args.seed,
-            "encoder_mode": "native",
+            "encoder_mode": "frozen_sdvae" if args.encoder == "sdvae" else "native",
             "encode_nfe": 1,
             "decode_nfe": args.steps,
             "unique_parameters": unique_parameters,
