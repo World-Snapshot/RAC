@@ -1,7 +1,7 @@
 diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
 --- a/train_REPA_rac_tuning.py
 +++ b/train_REPA_rac_tuning.py
-@@ -34,10 +34,17 @@ def parse_args():
+@@ -34,10 +34,28 @@ def parse_args():
          default="train",
          help="Dataset split name when using a HF dataset clone.",
      )
@@ -11,6 +11,17 @@ diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
      parser.add_argument("--size", type=int, default=256)
      parser.add_argument("--lr", type=float, default=3e-4)
 +    parser.add_argument(
++        "--grad-clip",
++        type=float,
++        default=0.0,
++        help="Clip the trainable-parameter gradient norm when positive (default: disabled).",
++    )
++    parser.add_argument(
++        "--override-resume-lr",
++        action="store_true",
++        help="After restoring optimizer state, replace its learning rate with --lr.",
++    )
++    parser.add_argument(
 +        "--log-dir",
 +        type=str,
 +        default=None,
@@ -19,7 +30,7 @@ diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
      parser.add_argument("--log-every", type=int, default=20)
      parser.add_argument("--gallery-every", type=int, default=100)
      parser.add_argument(
-@@ -1140,6 +1147,9 @@ def get_decoder_config(teacher):
+@@ -1140,6 +1158,9 @@ def get_decoder_config(teacher):
  def main():
      args = parse_args()
  
@@ -29,7 +40,7 @@ diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
      if not torch.cuda.is_available():
          raise RuntimeError("CUDA is required for training. No GPU detected.")
      gpu_index = auto_select_gpu()
-@@ -1205,7 +1215,10 @@ def main():
+@@ -1205,7 +1226,10 @@ def main():
      decode_path_losses = []
      encode_path_losses = [] if args.enc_loss else None
  
@@ -41,3 +52,14 @@ diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
      log_path = log_dir / "log.txt"
      start_time = time.time()
      resume_ckpt_path = find_resume_checkpoint(log_dir)
+@@ -1220,0 +1245,3 @@ def main():
++            if args.override_resume_lr:
++                for param_group in opt.param_groups:
++                    param_group["lr"] = args.lr
+@@ -1410,0 +1438,6 @@ def main():
++        if args.grad_clip > 0:
++            scaler.unscale_(opt)
++            torch.nn.utils.clip_grad_norm_(
++                [p for p in model.parameters() if p.requires_grad],
++                args.grad_clip,
++            )

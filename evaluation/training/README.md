@@ -45,6 +45,9 @@ count and compute are shown explicitly rather than described as capacity matched
   makes recent Accelerate versions unscale the same optimizer twice. Apply
   `patches/ssdd_single_grad_clip.patch` inside the SSDD checkout; it concatenates the trainable
   parameters and preserves the official clipping threshold in one call.
+- Apply `patches/rac_seed_log_dir.patch` to the RAC trainer to expose deterministic output paths,
+  optional gradient clipping, and explicit learning-rate override on resume. The controlled RAC
+  run uses gradient-norm clipping at 1.0 after an unclipped pilot became numerically unstable.
 - `dito_b_f8c4_local_smoke.yaml` is a one-update DiTo-B configuration for checking the complete
   local-data training path. Formal runs should override the four iteration fields with the shared
   budget and validation milestones.
@@ -65,7 +68,7 @@ CUDA_VISIBLE_DEVICES=5 python \
   --teacher-pretrained stabilityai/sd-vae-ft-mse \
   --log-dir evaluation/results/training/rac/local_stage1 \
   --seed 0 --batch-size 2 --steps 2010 --sample-steps 4 \
-  --no-finetune-decoder --no-adapter --amp
+  --grad-clip 1.0 --no-finetune-decoder --no-adapter --amp
 ```
 
 SSDD-S with the same frozen SD-VAE latent:
