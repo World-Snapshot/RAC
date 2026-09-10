@@ -1,0 +1,31 @@
+__base__: configs/experiments/dito-B-f8c4.yaml
+seed: 0
+
+datasets:
+  train:
+    args:
+      dataset:
+        args:
+          root_path: /research/cbim/vast/sf895/code/RAC/evaluation/data/controlled-mini-imagenet/train
+    loader: {batch_size: 2, num_workers: 4}
+  val:
+    args:
+      dataset:
+        args:
+          root_path: /research/cbim/vast/sf895/code/RAC/evaluation/data/controlled-mini-imagenet/val
+    loader: {batch_size: 2, num_workers: 4}
+  eval_ae:
+    args:
+      dataset:
+        args:
+          root_path: /research/cbim/vast/sf895/code/RAC/evaluation/data/controlled-mini-imagenet/val
+    loader: {batch_size: 2, num_workers: 4, drop_last: false}
+
+max_iter: 2010
+epoch_iter: 670
+eval_iter: 2010
+save_iter: 2010
+vis_iter: null
+eval_ae_max_samples: 20
+visualize_ae_random_n_samples: 0
+autocast_bfloat16: true

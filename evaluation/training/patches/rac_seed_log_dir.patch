@@ -1,0 +1,43 @@
+diff --git a/train_REPA_rac_tuning.py b/train_REPA_rac_tuning.py
+--- a/train_REPA_rac_tuning.py
++++ b/train_REPA_rac_tuning.py
+@@ -34,10 +34,17 @@ def parse_args():
+         default="train",
+         help="Dataset split name when using a HF dataset clone.",
+     )
++    parser.add_argument("--seed", type=int, default=0)
+     parser.add_argument("--batch-size", type=int, default=2)
+     parser.add_argument("--steps", type=int, default=14000)
+     parser.add_argument("--size", type=int, default=256)
+     parser.add_argument("--lr", type=float, default=3e-4)
++    parser.add_argument(
++        "--log-dir",
++        type=str,
++        default=None,
++        help="Optional output directory. Defaults to log/<trainer-name> for compatibility.",
++    )
+     parser.add_argument("--log-every", type=int, default=20)
+     parser.add_argument("--gallery-every", type=int, default=100)
+     parser.add_argument(
+@@ -1140,6 +1147,9 @@ def get_decoder_config(teacher):
+ def main():
+     args = parse_args()
+ 
++    np.random.seed(args.seed)
++    torch.manual_seed(args.seed)
++    torch.cuda.manual_seed_all(args.seed)
+     if not torch.cuda.is_available():
+         raise RuntimeError("CUDA is required for training. No GPU detected.")
+     gpu_index = auto_select_gpu()
+@@ -1205,7 +1215,10 @@ def main():
+     decode_path_losses = []
+     encode_path_losses = [] if args.enc_loss else None
+ 
+-    log_dir = Path(__file__).resolve().parent / "log" / Path(__file__).stem
++    if args.log_dir is None:
++        log_dir = Path(__file__).resolve().parent / "log" / Path(__file__).stem
++    else:
++        log_dir = Path(args.log_dir).expanduser().resolve()
+     log_path = log_dir / "log.txt"
+     start_time = time.time()
+     resume_ckpt_path = find_resume_checkpoint(log_dir)

@@ -1,0 +1,15 @@
+diff --git a/ssdd/tasks.py b/ssdd/tasks.py
+--- a/ssdd/tasks.py
++++ b/ssdd/tasks.py
+@@ -355,8 +355,9 @@ class BaseTask(ABC):
+         acc.backward(sum_loss)
+ 
+         if self.cfg.training.grad_clip and acc.sync_gradients:
+-            for m in models:
+-                acc.clip_grad_norm_(m.parameters(), self.cfg.training.grad_clip)
++            # GradScaler permits only one unscale operation per optimizer step.
++            parameters = (p for m in models for p in m.parameters() if p.requires_grad)
++            acc.clip_grad_norm_(parameters, self.cfg.training.grad_clip)
+         optimizer.step()
+         optimizer.zero_grad(set_to_none=True)  # Keep here to ensure grad accumulation works correctly
+ 
